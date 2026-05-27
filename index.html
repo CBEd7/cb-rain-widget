@@ -43,13 +43,28 @@ const weatherURL =
 "https://cb-nws-proxy.eion-dockery1998.workers.dev";
 
 fetch(weatherURL)
-.then(response => response.json())
+.then(response => {
+if (!response.ok) {
+throw new Error("Worker request failed");
+}
+return response.json();
+})
 .then(data => {
+if (!data.properties || !data.properties.periods) {
+throw new Error("Invalid NWS data format");
+}
+
 const periods = data.properties.periods.slice(0,24);
 
-const rainChances = periods.map(period =>
-period.probabilityOfPrecipitation.value || 0
-);
+const rainChances = periods.map(period => {
+if (
+period.probabilityOfPrecipitation &&
+period.probabilityOfPrecipitation.value !== null
+) {
+return period.probabilityOfPrecipitation.value;
+}
+return 0;
+});
 
 const currentChance = rainChances[0] || 0;
 const highestChance = Math.max(...rainChances);
@@ -86,7 +101,8 @@ alertBox.style.color = alertText;
 document.getElementById("currentRain").innerHTML = "Unavailable";
 document.getElementById("forecastRain").innerHTML = "Unavailable";
 document.getElementById("riskLevel").innerHTML = "Unavailable";
-document.getElementById("cb-alert").innerHTML = "National Weather Service data could not load.";
+document.getElementById("cb-alert").innerHTML =
+"National Weather Service data could not load. Check the Cloudflare Worker connection.";
 });
 </script>
 </body>
