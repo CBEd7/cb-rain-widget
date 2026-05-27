@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carolina Beach Predictive Rain Gauge</title>
+<title>Carolina Beach Stormwater Forecast Dashboard</title>
 
 <style>
 body{
@@ -26,7 +26,7 @@ margin:auto;
 #cb-rain-widget h2{
 margin-top:0;
 color:#003b5c;
-font-size:38px;
+font-size:34px;
 }
 
 .cb-grid{
@@ -51,7 +51,7 @@ color:#345;
 
 .cb-card strong{
 display:block;
-font-size:42px;
+font-size:38px;
 margin-top:10px;
 color:#004b7a;
 }
@@ -61,7 +61,7 @@ margin-top:24px;
 padding:16px;
 border-radius:10px;
 font-weight:bold;
-font-size:18px;
+font-size:17px;
 background:#e8f5e9;
 color:#1b5e20;
 }
@@ -85,7 +85,7 @@ padding-top:12px;
 
 <div id="cb-rain-widget">
 
-<h2>Predictive Rain Gauge</h2>
+<h2>Stormwater Forecast Dashboard</h2>
 
 <div class="cb-grid">
 
@@ -100,7 +100,7 @@ padding-top:12px;
 </div>
 
 <div class="cb-card">
-<span>Flood Risk</span>
+<span>12-Hour Stormwater Outlook</span>
 <strong id="riskLevel">Loading...</strong>
 </div>
 
@@ -116,7 +116,7 @@ Town of Carolina Beach Stormwater Forecast Dashboard
 
 <p class="cb-disclaimer">
 <strong>Notice:</strong>
-This tool is intended to support public awareness of forecast rainfall conditions and potential stormwater impacts. Conditions may change rapidly during severe weather events. Residents should continue to monitor official weather alerts, emergency notifications, and local guidance.
+This dashboard is intended to support public awareness of short-term forecast rainfall conditions and possible stormwater impacts. It does not predict flooding, road closures, emergency conditions, or property impacts. Conditions may change rapidly during storm events. Residents should continue to monitor official weather alerts, emergency notifications, and local guidance.
 </p>
 
 </div>
@@ -133,10 +133,10 @@ fetch(weatherURL)
 .then(data => {
 
 const rainChances =
-data.hourly.precipitation_probability.slice(0,24);
+data.hourly.precipitation_probability.slice(0,12);
 
 const rainfall =
-data.hourly.precipitation.slice(0,24);
+data.hourly.precipitation.slice(0,12);
 
 const currentChance =
 rainChances[0] || 0;
@@ -150,73 +150,36 @@ rainfall.reduce((sum,value)=>sum+value,0);
 const totalRainIN =
 (totalRainMM / 25.4).toFixed(2);
 
-document.getElementById(
-"currentRain"
-).innerHTML =
+document.getElementById("currentRain").innerHTML =
 currentChance + "%";
 
-document.getElementById(
-"forecastRain"
-).innerHTML =
-highestChance + "% / " +
-totalRainIN + " in";
+document.getElementById("forecastRain").innerHTML =
+highestChance + "% / " + totalRainIN + " in";
 
-let risk = "LOW";
+let outlook = "NORMAL";
+let note = "No major rainfall signal in the 12-hour forecast.";
+let alertColor = "#e8f5e9";
+let alertText = "#1b5e20";
 
-let note =
-"No major rainfall expected.";
-
-let alertColor =
-"#e8f5e9";
-
-let alertText =
-"#1b5e20";
-
-if(
-highestChance >= 70 ||
-totalRainIN >= 1.5
-){
-
-risk = "HIGH";
-
-note =
-"Flooding possible in low-lying areas. Monitor Carolina Beach Lake and known stormwater ponding locations.";
-
-alertColor =
-"#ffebee";
-
-alertText =
-"#b71c1c";
-
+if(totalRainIN >= 2.5){
+outlook = "ELEVATED";
+note = "Rainfall amounts may be elevated over the next 12 hours. Monitor official forecasts and local conditions.";
+alertColor = "#fff8e1";
+alertText = "#8a5a00";
 }
 
-else if(
-highestChance >= 40 ||
-totalRainIN >= 0.75
-){
-
-risk = "MODERATE";
-
-note =
-"Moderate rainfall possible. Some ponding may occur.";
-
-alertColor =
-"#fff8e1";
-
-alertText =
-"#8a5a00";
-
+else if(totalRainIN >= 1.0 || highestChance >= 70){
+outlook = "MONITOR";
+note = "Rain is possible over the next 12 hours. Some nuisance ponding may occur in low-lying or poor-drainage areas.";
+alertColor = "#eef6ff";
+alertText = "#004b7a";
 }
 
-document.getElementById(
-"riskLevel"
-).innerHTML =
-risk;
+document.getElementById("riskLevel").innerHTML =
+outlook;
 
 const alertBox =
-document.getElementById(
-"cb-alert"
-);
+document.getElementById("cb-alert");
 
 alertBox.innerHTML =
 note;
@@ -231,24 +194,16 @@ alertText;
 
 .catch(error => {
 
-document.getElementById(
-"currentRain"
-).innerHTML =
+document.getElementById("currentRain").innerHTML =
 "Unavailable";
 
-document.getElementById(
-"forecastRain"
-).innerHTML =
+document.getElementById("forecastRain").innerHTML =
 "Unavailable";
 
-document.getElementById(
-"riskLevel"
-).innerHTML =
+document.getElementById("riskLevel").innerHTML =
 "Unavailable";
 
-document.getElementById(
-"cb-alert"
-).innerHTML =
+document.getElementById("cb-alert").innerHTML =
 "Forecast data could not load.";
 
 });
