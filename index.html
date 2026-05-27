@@ -1,10 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Carolina Beach Predictive Rain Gauge</title>
+
+<style>
+
+body{
+margin:0;
+padding:20px;
+background:white;
+font-family:Arial,sans-serif;
+}
+
+#cb-rain-widget{
+border:1px solid #cfd8e3;
+border-radius:12px;
+padding:22px;
+background:#ffffff;
+color:#063b63;
+max-width:1000px;
+margin:auto;
+}
+
+#cb-rain-widget h2{
+margin-top:0;
+color:#003b5c;
+font-size:38px;
+}
+
+.cb-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:16px;
+margin-top:24px;
+}
+
+.cb-card{
+border:1px solid #d7e1ea;
+border-radius:10px;
+padding:18px;
+background:#f8fbfd;
+}
+
+.cb-card span{
+display:block;
+font-size:15px;
+color:#345;
+}
+
+.cb-card strong{
+display:block;
+font-size:42px;
+margin-top:10px;
+color:#004b7a;
+}
+
+#cb-alert{
+margin-top:24px;
+padding:16px;
+border-radius:10px;
+font-weight:bold;
+font-size:18px;
+background:#e8f5e9;
+color:#1b5e20;
+}
+
+.cb-source{
+font-size:12px;
+margin-top:20px;
+color:#666;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="cb-rain-widget">
+
+<h2>Predictive Rain Gauge</h2>
+
+<div class="cb-grid">
+
+<div class="cb-card">
+<span>Current Rain Chance</span>
+<strong id="currentRain">Loading...</strong>
+</div>
+
+<div class="cb-card">
+<span>Highest Rain Chance</span>
+<strong id="forecastRain">Loading...</strong>
+</div>
+
+<div class="cb-card">
+<span>Flood Risk</span>
+<strong id="riskLevel">Loading...</strong>
+</div>
+
+</div>
+
+<div id="cb-alert">
+Loading NOAA weather data...
+</div>
+
+<p class="cb-source">
+Data Source: NOAA / National Weather Service
+</p>
+
+</div>
 
 <script>
+
 const weatherURL =
 "https://api.weather.gov/gridpoints/ILM/64,34/forecast/hourly";
 
 fetch(weatherURL)
+
 .then(response => response.json())
+
 .then(data => {
 
 const periods =
@@ -21,55 +140,103 @@ rainChances[0] || 0;
 const highestChance =
 Math.max(...rainChances);
 
-document.getElementById("currentRain").innerHTML =
+document.getElementById(
+"currentRain"
+).innerHTML =
 currentChance + "%";
 
-document.getElementById("forecastRain").innerHTML =
+document.getElementById(
+"forecastRain"
+).innerHTML =
 highestChance + "%";
 
 let risk = "LOW";
-let note = "No major rainfall expected.";
-let alertColor = "#e8f5e9";
-let alertText = "#1b5e20";
 
-if (highestChance >= 70) {
+let note =
+"No major rainfall expected.";
+
+let alertColor =
+"#e8f5e9";
+
+let alertText =
+"#1b5e20";
+
+if(highestChance >= 70){
+
 risk = "HIGH";
-note = "High rain chance in the next 24 hours. Monitor Carolina Beach Lake and low-lying ponding locations.";
-alertColor = "#ffebee";
-alertText = "#b71c1c";
+
+note =
+"High rainfall potential. Monitor Carolina Beach Lake and low-lying flooding areas.";
+
+alertColor =
+"#ffebee";
+
+alertText =
+"#b71c1c";
+
 }
 
-else if (highestChance >= 40) {
+else if(highestChance >= 40){
+
 risk = "MODERATE";
-note = "Moderate rain chance. Some ponding may occur in low-lying areas.";
-alertColor = "#fff8e1";
-alertText = "#8a5a00";
+
+note =
+"Moderate rainfall possible. Some ponding may occur.";
+
+alertColor =
+"#fff8e1";
+
+alertText =
+"#8a5a00";
+
 }
 
-document.getElementById("riskLevel").innerHTML = risk;
+document.getElementById(
+"riskLevel"
+).innerHTML =
+risk;
 
 const alertBox =
-document.getElementById("cb-alert");
+document.getElementById(
+"cb-alert"
+);
 
-alertBox.innerHTML = note;
-alertBox.style.background = alertColor;
-alertBox.style.color = alertText;
+alertBox.innerHTML =
+note;
+
+alertBox.style.background =
+alertColor;
+
+alertBox.style.color =
+alertText;
 
 })
 
 .catch(error => {
 
-document.getElementById("currentRain").innerHTML =
+document.getElementById(
+"currentRain"
+).innerHTML =
 "Unavailable";
 
-document.getElementById("forecastRain").innerHTML =
+document.getElementById(
+"forecastRain"
+).innerHTML =
 "Unavailable";
 
-document.getElementById("riskLevel").innerHTML =
+document.getElementById(
+"riskLevel"
+).innerHTML =
 "Unavailable";
 
-document.getElementById("cb-alert").innerHTML =
+document.getElementById(
+"cb-alert"
+).innerHTML =
 "NOAA weather data could not load.";
 
 });
+
 </script>
+
+</body>
+</html>
