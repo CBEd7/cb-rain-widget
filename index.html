@@ -6,104 +6,255 @@
 <title>Carolina Beach Predictive Rain Gauge</title>
 
 <style>
-body{margin:0;padding:20px;background:white;font-family:Arial,sans-serif;}
-#cb-rain-widget{border:1px solid #cfd8e3;border-radius:12px;padding:22px;background:#fff;color:#063b63;max-width:1000px;margin:auto;}
-h2{margin-top:0;color:#003b5c;font-size:38px;}
-.cb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px;}
-.cb-card{border:1px solid #d7e1ea;border-radius:10px;padding:18px;background:#f8fbfd;}
-.cb-card span{display:block;font-size:15px;color:#345;}
-.cb-card strong{display:block;font-size:42px;margin-top:10px;color:#004b7a;}
-#cb-alert{margin-top:24px;padding:16px;border-radius:10px;font-weight:bold;font-size:18px;background:#e8f5e9;color:#1b5e20;}
-.cb-source,.cb-disclaimer{font-size:12px;margin-top:18px;color:#666;line-height:1.4;}
-.cb-disclaimer{border-top:1px solid #ddd;padding-top:12px;}
+body{
+margin:0;
+padding:20px;
+background:white;
+font-family:Arial,sans-serif;
+}
+
+#cb-rain-widget{
+border:1px solid #cfd8e3;
+border-radius:12px;
+padding:22px;
+background:#ffffff;
+color:#063b63;
+max-width:1000px;
+margin:auto;
+}
+
+#cb-rain-widget h2{
+margin-top:0;
+color:#003b5c;
+font-size:38px;
+}
+
+.cb-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:16px;
+margin-top:24px;
+}
+
+.cb-card{
+border:1px solid #d7e1ea;
+border-radius:10px;
+padding:18px;
+background:#f8fbfd;
+}
+
+.cb-card span{
+display:block;
+font-size:15px;
+color:#345;
+}
+
+.cb-card strong{
+display:block;
+font-size:42px;
+margin-top:10px;
+color:#004b7a;
+}
+
+#cb-alert{
+margin-top:24px;
+padding:16px;
+border-radius:10px;
+font-weight:bold;
+font-size:18px;
+background:#e8f5e9;
+color:#1b5e20;
+}
+
+.cb-source,
+.cb-disclaimer{
+font-size:12px;
+margin-top:18px;
+color:#666;
+line-height:1.4;
+}
+
+.cb-disclaimer{
+border-top:1px solid #ddd;
+padding-top:12px;
+}
 </style>
 </head>
 
 <body>
+
 <div id="cb-rain-widget">
+
 <h2>Predictive Rain Gauge</h2>
 
 <div class="cb-grid">
-<div class="cb-card"><span>Current Rain Chance</span><strong id="currentRain">Loading...</strong></div>
-<div class="cb-card"><span>Highest Rain Chance</span><strong id="forecastRain">Loading...</strong></div>
-<div class="cb-card"><span>Flood Risk</span><strong id="riskLevel">Loading...</strong></div>
+
+<div class="cb-card">
+<span>Current Rain Chance</span>
+<strong id="currentRain">Loading...</strong>
 </div>
 
-<div id="cb-alert">Loading National Weather Service data...</div>
+<div class="cb-card">
+<span>Highest Rain Chance / Forecast Rain</span>
+<strong id="forecastRain">Loading...</strong>
+</div>
 
-<p class="cb-source">Data Source: NOAA / National Weather Service API</p>
+<div class="cb-card">
+<span>Flood Risk</span>
+<strong id="riskLevel">Loading...</strong>
+</div>
+
+</div>
+
+<div id="cb-alert">
+Loading forecast data...
+</div>
+
+<p class="cb-source">
+Data Source: Open-Meteo Forecast API
+</p>
 
 <p class="cb-disclaimer">
-<strong>Prototype Disclaimer:</strong> This predictive rain gauge is a prototype public-information tool. Forecasts and flood risk levels are estimates based on National Weather Service forecast data and should not be used as an official emergency alert, evacuation notice, or substitute for National Weather Service advisories, Town alerts, or emergency management guidance.
+<strong>Prototype Disclaimer:</strong>
+This predictive rain gauge is a prototype public-information tool.
+Forecasts and flood risk levels are estimates based on publicly available forecast model data and should not be used as an official emergency alert, evacuation notice, or substitute for National Weather Service advisories, Town alerts, or emergency management guidance.
 </p>
+
 </div>
 
 <script>
+
 const weatherURL =
-"https://cb-nws-proxy.eion-dockery1998.workers.dev";
+"https://api.open-meteo.com/v1/forecast?latitude=34.035&longitude=-77.894&hourly=precipitation_probability,precipitation&forecast_days=1&timezone=America%2FNew_York";
 
 fetch(weatherURL)
-.then(response => {
-if (!response.ok) {
-throw new Error("Worker request failed");
-}
-return response.json();
-})
+
+.then(response => response.json())
+
 .then(data => {
-if (!data.properties || !data.properties.periods) {
-throw new Error("Invalid NWS data format");
-}
 
-const periods = data.properties.periods.slice(0,24);
+const rainChances =
+data.hourly.precipitation_probability.slice(0,24);
 
-const rainChances = periods.map(period => {
-if (
-period.probabilityOfPrecipitation &&
-period.probabilityOfPrecipitation.value !== null
-) {
-return period.probabilityOfPrecipitation.value;
-}
-return 0;
-});
+const rainfall =
+data.hourly.precipitation.slice(0,24);
 
-const currentChance = rainChances[0] || 0;
-const highestChance = Math.max(...rainChances);
+const currentChance =
+rainChances[0] || 0;
 
-document.getElementById("currentRain").innerHTML = currentChance + "%";
-document.getElementById("forecastRain").innerHTML = highestChance + "%";
+const highestChance =
+Math.max(...rainChances);
+
+const totalRainMM =
+rainfall.reduce((sum,value)=>sum+value,0);
+
+const totalRainIN =
+(totalRainMM / 25.4).toFixed(2);
+
+document.getElementById(
+"currentRain"
+).innerHTML =
+currentChance + "%";
+
+document.getElementById(
+"forecastRain"
+).innerHTML =
+highestChance + "% / " +
+totalRainIN + " in";
 
 let risk = "LOW";
-let note = "No major rainfall concern expected from the current National Weather Service forecast.";
-let alertColor = "#e8f5e9";
-let alertText = "#1b5e20";
 
-if(highestChance >= 70){
+let note =
+"No major rainfall expected.";
+
+let alertColor =
+"#e8f5e9";
+
+let alertText =
+"#1b5e20";
+
+if(
+highestChance >= 70 ||
+totalRainIN >= 1.5
+){
+
 risk = "HIGH";
-note = "High rainfall potential in the next 24 hours. Monitor Carolina Beach Lake, low-lying areas, and known ponding locations.";
-alertColor = "#ffebee";
-alertText = "#b71c1c";
+
+note =
+"Flooding possible in low-lying areas. Monitor Carolina Beach Lake and known stormwater ponding locations.";
+
+alertColor =
+"#ffebee";
+
+alertText =
+"#b71c1c";
+
 }
-else if(highestChance >= 40){
+
+else if(
+highestChance >= 40 ||
+totalRainIN >= 0.75
+){
+
 risk = "MODERATE";
-note = "Moderate rainfall potential in the next 24 hours. Some ponding may occur in low-lying areas.";
-alertColor = "#fff8e1";
-alertText = "#8a5a00";
+
+note =
+"Moderate rainfall possible. Some ponding may occur.";
+
+alertColor =
+"#fff8e1";
+
+alertText =
+"#8a5a00";
+
 }
 
-document.getElementById("riskLevel").innerHTML = risk;
+document.getElementById(
+"riskLevel"
+).innerHTML =
+risk;
 
-const alertBox = document.getElementById("cb-alert");
-alertBox.innerHTML = note;
-alertBox.style.background = alertColor;
-alertBox.style.color = alertText;
+const alertBox =
+document.getElementById(
+"cb-alert"
+);
+
+alertBox.innerHTML =
+note;
+
+alertBox.style.background =
+alertColor;
+
+alertBox.style.color =
+alertText;
+
 })
+
 .catch(error => {
-document.getElementById("currentRain").innerHTML = "Unavailable";
-document.getElementById("forecastRain").innerHTML = "Unavailable";
-document.getElementById("riskLevel").innerHTML = "Unavailable";
-document.getElementById("cb-alert").innerHTML =
-"National Weather Service data could not load. Check the Cloudflare Worker connection.";
+
+document.getElementById(
+"currentRain"
+).innerHTML =
+"Unavailable";
+
+document.getElementById(
+"forecastRain"
+).innerHTML =
+"Unavailable";
+
+document.getElementById(
+"riskLevel"
+).innerHTML =
+"Unavailable";
+
+document.getElementById(
+"cb-alert"
+).innerHTML =
+"Forecast data could not load.";
+
 });
+
 </script>
+
 </body>
 </html>
